@@ -12,10 +12,18 @@ internal static class Program
     // see https://aka.ms/applicationconfiguration.
     ApplicationConfiguration.Initialize();
 
-
+    try
+    {
     using var icon = new AppNotifyIcon();
 
     Application.Run();
     GC.KeepAlive(icon);
+    }
+    catch (Exception ex)
+    {
+      _ = MessageBox.Show("Unhandled Exception:\n" + ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Stop);
+      Application.Exit();
+    }
+
   }
 }

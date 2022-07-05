@@ -2,6 +2,7 @@
 using System.Net.NetworkInformation;
 
 namespace NetMonTray;
+
 internal class AppNotifyIcon : IDisposable
 {
   private bool disposedValue;
