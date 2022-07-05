@@ -3,7 +3,7 @@ using System.Net.NetworkInformation;
 
 namespace NetMonTray;
 
-internal class AppNotifyIcon : IDisposable
+internal class AppNotifyIcon : ApplicationContext
 {
   private bool disposedValue;
 
@@ -20,9 +20,15 @@ internal class AppNotifyIcon : IDisposable
 
   public AppNotifyIcon()
   {
-    Icon = CreateNotifyIcon();
+    Application.ApplicationExit += Application_ApplicationExit;
+      Icon = CreateNotifyIcon();
     PingTimer = CreateTimer();
     PingTimer.Tick += PingTimer_Tick;
+  }
+
+  private void Application_ApplicationExit(object? sender, EventArgs e)
+  {
+    Icon.Visible = false;
   }
 
   private static System.Windows.Forms.Timer CreateTimer() => new()
@@ -35,6 +41,7 @@ internal class AppNotifyIcon : IDisposable
   private static NotifyIcon CreateNotifyIcon() => new()
   {
     Icon = Properties.Resources.trafficlight_green_256,
+    Text = "NetMon",
     ContextMenuStrip = CreateMenu(),
     Visible = true,
   };
@@ -74,8 +81,15 @@ internal class AppNotifyIcon : IDisposable
     if (_timerIsBusy) return;
     _timerIsBusy = true;
 
-    await CheckState();
-    _timerIsBusy = false;
+    try
+    {
+      await CheckState();
+    }
+    finally
+    {
+      _timerIsBusy = false;
+    }
+
   }
 
   private async Task CheckState()
@@ -118,17 +132,22 @@ internal class AppNotifyIcon : IDisposable
 
   private static async Task<bool> PerformPingTest()
   {
-    using var p = new Ping();
+    try
+    {
+      using var p = new Ping();
+      var r = await p.SendPingAsync(PingTarget);
+      return r.Status == IPStatus.Success;
+    }
 
-    var r = await p.SendPingAsync(PingTarget);
-
-    return r.Status == IPStatus.Success;
-
+    catch (PingException)
+    {
+      return false;
+    }
   }
 
   #region IDisposable
 
-  protected virtual void Dispose(bool disposing)
+  protected override void Dispose(bool disposing)
   {
     if (!disposedValue)
     {
@@ -145,11 +164,5 @@ internal class AppNotifyIcon : IDisposable
     }
   }
 
-
-  public void Dispose()
-  {
-    Dispose(disposing: true);
-    GC.SuppressFinalize(this);
-  }
   #endregion
 }

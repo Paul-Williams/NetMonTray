@@ -14,14 +14,11 @@ internal static class Program
 
     try
     {
-    using var icon = new AppNotifyIcon();
-
-    Application.Run();
-    GC.KeepAlive(icon);
+      Application.Run(new AppNotifyIcon());
     }
     catch (Exception ex)
     {
-      _ = MessageBox.Show("Unhandled Exception:\n" + ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Stop);
+      _ = MessageBox.Show("Unhandled Exception:\n" + ex.ToString(), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Stop);
       Application.Exit();
     }
 
